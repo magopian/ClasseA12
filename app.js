@@ -770,11 +770,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.am.R === region.aw.R)
+	if (region.ag.L === region.ap.L)
 	{
-		return 'on line ' + region.am.R;
+		return 'on line ' + region.ag.L;
 	}
-	return 'on lines ' + region.am.R + ' through ' + region.aw.R;
+	return 'on lines ' + region.ag.L + ' through ' + region.ap.L;
 }
 
 
@@ -1841,9 +1841,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.ba,
-		impl.bl,
-		impl.bj,
+		impl.a4,
+		impl.bk,
+		impl.bg,
 		function() { return function() {} }
 	);
 });
@@ -2297,6 +2297,188 @@ function _Platform_mergeExportsDebug(moduleName, obj, exports)
 }
 
 
+
+// SEND REQUEST
+
+var _Http_toTask = F2(function(request, maybeProgress)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var xhr = new XMLHttpRequest();
+
+		_Http_configureProgress(xhr, maybeProgress);
+
+		xhr.addEventListener('error', function() {
+			callback(_Scheduler_fail(elm$http$Http$NetworkError));
+		});
+		xhr.addEventListener('timeout', function() {
+			callback(_Scheduler_fail(elm$http$Http$Timeout));
+		});
+		xhr.addEventListener('load', function() {
+			callback(_Http_handleResponse(xhr, request.aa.a));
+		});
+
+		try
+		{
+			xhr.open(request.ac, request.bl, true);
+		}
+		catch (e)
+		{
+			return callback(_Scheduler_fail(elm$http$Http$BadUrl(request.bl)));
+		}
+
+		_Http_configureRequest(xhr, request);
+
+		var body = request.aS;
+		xhr.send(elm$http$Http$Internal$isStringBody(body)
+			? (xhr.setRequestHeader('Content-Type', body.a), body.b)
+			: body.a
+		);
+
+		return function() { xhr.abort(); };
+	});
+});
+
+function _Http_configureProgress(xhr, maybeProgress)
+{
+	if (!elm$core$Maybe$isJust(maybeProgress))
+	{
+		return;
+	}
+
+	xhr.addEventListener('progress', function(event) {
+		if (!event.lengthComputable)
+		{
+			return;
+		}
+		_Scheduler_rawSpawn(maybeProgress.a({
+			aU: event.loaded,
+			aV: event.total
+		}));
+	});
+}
+
+function _Http_configureRequest(xhr, request)
+{
+	for (var headers = request.W; headers.b; headers = headers.b) // WHILE_CONS
+	{
+		xhr.setRequestHeader(headers.a.a, headers.a.b);
+	}
+
+	xhr.responseType = request.aa.b;
+	xhr.withCredentials = request.aj;
+
+	elm$core$Maybe$isJust(request.ai) && (xhr.timeout = request.ai.a);
+}
+
+
+// RESPONSES
+
+function _Http_handleResponse(xhr, responseToResult)
+{
+	var response = _Http_toResponse(xhr);
+
+	if (xhr.status < 200 || 300 <= xhr.status)
+	{
+		response.body = xhr.responseText;
+		return _Scheduler_fail(elm$http$Http$BadStatus(response));
+	}
+
+	var result = responseToResult(response);
+
+	if (elm$core$Result$isOk(result))
+	{
+		return _Scheduler_succeed(result.a);
+	}
+	else
+	{
+		response.body = xhr.responseText;
+		return _Scheduler_fail(A2(elm$http$Http$BadPayload, result.a, response));
+	}
+}
+
+function _Http_toResponse(xhr)
+{
+	return {
+		bl: xhr.responseURL,
+		bf: { aX: xhr.status, q: xhr.statusText },
+		W: _Http_parseHeaders(xhr.getAllResponseHeaders()),
+		aS: xhr.response
+	};
+}
+
+function _Http_parseHeaders(rawHeaders)
+{
+	var headers = elm$core$Dict$empty;
+
+	if (!rawHeaders)
+	{
+		return headers;
+	}
+
+	var headerPairs = rawHeaders.split('\u000d\u000a');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf('\u003a\u0020');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3(elm$core$Dict$update, key, function(oldValue) {
+				return elm$core$Maybe$Just(elm$core$Maybe$isJust(oldValue)
+					? value + ', ' + oldValue.a
+					: value
+				);
+			}, headers);
+		}
+	}
+
+	return headers;
+}
+
+
+// EXPECTORS
+
+function _Http_expectStringResponse(responseToResult)
+{
+	return {
+		$: 0,
+		b: 'text',
+		a: responseToResult
+	};
+}
+
+var _Http_mapExpect = F2(function(func, expect)
+{
+	return {
+		$: 0,
+		b: expect.b,
+		a: function(response) {
+			var convertedResponse = expect.a(response);
+			return A2(elm$core$Result$map, func, convertedResponse);
+		}
+	};
+});
+
+
+// BODY
+
+function _Http_multipart(parts)
+{
+
+
+	for (var formData = new FormData(); parts.b; parts = parts.b) // WHILE_CONS
+	{
+		var part = parts.a;
+		formData.append(part.a, part.b);
+	}
+
+	return elm$http$Http$Internal$FormDataBody(formData);
+}
+
+
 function _Url_percentEncode(string)
 {
 	return encodeURIComponent(string);
@@ -2660,9 +2842,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		s: func(record.s),
-		an: record.an,
-		al: record.al
+		q: func(record.q),
+		ah: record.ah,
+		af: record.af
 	}
 });
 
@@ -2930,11 +3112,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.s;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.an;
+		var message = !tag ? value : tag < 3 ? value.a : value.q;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.ah;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.al) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.af) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3880,11 +4062,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.ba,
-		impl.bl,
-		impl.bj,
+		impl.a4,
+		impl.bk,
+		impl.bg,
 		function(sendToApp, initialModel) {
-			var view = impl.bm;
+			var view = impl.bn;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3916,12 +4098,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.ba,
-		impl.bl,
-		impl.bj,
+		impl.a4,
+		impl.bk,
+		impl.bg,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.U && impl.U(sendToApp)
-			var view = impl.bm;
+			var divertHrefToApp = impl.O && impl.O(sendToApp)
+			var view = impl.bn;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3929,12 +4111,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aZ);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aS);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.v) && (_VirtualDom_doc.title = title = doc.v);
+				(title !== doc.bj) && (_VirtualDom_doc.title = title = doc.bj);
 			});
 		}
 	);
@@ -3985,12 +4167,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.bd;
-	var onUrlRequest = impl.be;
+	var onUrlChange = impl.a8;
+	var onUrlRequest = impl.a9;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		U: function(sendToApp)
+		O: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4006,9 +4188,9 @@ function _Browser_application(impl)
 					var next = elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.aK === next.aK
-							&& curr.aB === next.aB
-							&& curr.aH.a === next.aH.a
+							&& curr.aD === next.aD
+							&& curr.au === next.au
+							&& curr.aA.a === next.aA.a
 						)
 							? elm$browser$Browser$Internal(next)
 							: elm$browser$Browser$External(href)
@@ -4016,13 +4198,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		ba: function(flags)
+		a4: function(flags)
 		{
-			return A3(impl.ba, flags, _Browser_getUrl(), key);
+			return A3(impl.a4, flags, _Browser_getUrl(), key);
 		},
-		bm: impl.bm,
-		bl: impl.bl,
-		bj: impl.bj
+		bn: impl.bn,
+		bk: impl.bk,
+		bg: impl.bg
 	});
 }
 
@@ -4088,17 +4270,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { a8: 'hidden', P: 'visibilitychange' }
+		? { a2: 'hidden', J: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { a8: 'mozHidden', P: 'mozvisibilitychange' }
+		? { a2: 'mozHidden', J: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { a8: 'msHidden', P: 'msvisibilitychange' }
+		? { a2: 'msHidden', J: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { a8: 'webkitHidden', P: 'webkitvisibilitychange' }
-		: { a8: 'hidden', P: 'visibilitychange' };
+		? { a2: 'webkitHidden', J: 'webkitvisibilitychange' }
+		: { a2: 'hidden', J: 'visibilitychange' };
 }
 
 
@@ -4179,12 +4361,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		aQ: _Browser_getScene(),
-		aV: {
-			ae: _Browser_window.pageXOffset,
-			af: _Browser_window.pageYOffset,
-			N: _Browser_doc.documentElement.clientWidth,
-			H: _Browser_doc.documentElement.clientHeight
+		aJ: _Browser_getScene(),
+		aO: {
+			Z: _Browser_window.pageXOffset,
+			_: _Browser_window.pageYOffset,
+			H: _Browser_doc.documentElement.clientWidth,
+			B: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4194,8 +4376,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		N: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		H: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		H: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		B: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4218,15 +4400,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			aQ: {
-				N: node.scrollWidth,
-				H: node.scrollHeight
+			aJ: {
+				H: node.scrollWidth,
+				B: node.scrollHeight
 			},
-			aV: {
-				ae: node.scrollLeft,
-				af: node.scrollTop,
-				N: node.clientWidth,
-				H: node.clientHeight
+			aO: {
+				Z: node.scrollLeft,
+				_: node.scrollTop,
+				H: node.clientWidth,
+				B: node.clientHeight
 			}
 		};
 	});
@@ -4256,18 +4438,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			aQ: _Browser_getScene(),
-			aV: {
-				ae: x,
-				af: y,
-				N: _Browser_doc.documentElement.clientWidth,
-				H: _Browser_doc.documentElement.clientHeight
+			aJ: _Browser_getScene(),
+			aO: {
+				Z: x,
+				_: y,
+				H: _Browser_doc.documentElement.clientWidth,
+				B: _Browser_doc.documentElement.clientHeight
 			},
-			a3: {
-				ae: x + rect.left,
-				af: y + rect.top,
-				N: rect.width,
-				H: rect.height
+			aZ: {
+				Z: x + rect.left,
+				_: y + rect.top,
+				H: rect.width,
+				B: rect.height
 			}
 		};
 	});
@@ -4303,25 +4485,40 @@ function _Browser_load(url)
 	}));
 }
 var author$project$Main$UrlChanged = function (a) {
-	return {$: 3, a: a};
+	return {$: 5, a: a};
 };
 var author$project$Main$UrlRequested = function (a) {
-	return {$: 4, a: a};
+	return {$: 6, a: a};
 };
-var author$project$Main$Blank = {$: 0};
-var author$project$Main$CounterMsg = function (a) {
+var author$project$Data$Session$Fetching = {$: 0};
+var author$project$Main$HomePage = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$Main$AboutMsg = function (a) {
 	return {$: 1, a: a};
 };
-var author$project$Main$CounterPage = function (a) {
-	return {$: 2, a: a};
+var author$project$Main$AboutPage = function (a) {
+	return {$: 1, a: a};
 };
 var author$project$Main$HomeMsg = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$Main$HomePage = function (a) {
-	return {$: 1, a: a};
+var author$project$Main$NewsletterMsg = function (a) {
+	return {$: 3, a: a};
 };
-var author$project$Main$NotFound = {$: 3};
+var author$project$Main$NewsletterPage = function (a) {
+	return {$: 3, a: a};
+};
+var author$project$Main$NotFound = {$: 4};
+var author$project$Main$ParticipateMsg = function (a) {
+	return {$: 2, a: a};
+};
+var author$project$Main$ParticipatePage = function (a) {
+	return {$: 2, a: a};
+};
+var author$project$Main$VideoListReceived = function (a) {
+	return {$: 8, a: a};
+};
 var elm$core$Basics$False = 1;
 var elm$core$Basics$True = 0;
 var elm$core$Result$isOk = function (result) {
@@ -4799,290 +4996,28 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 	});
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
-var author$project$Page$Counter$init = function (session) {
-	return _Utils_Tuple2(0, elm$core$Platform$Cmd$none);
-};
-var author$project$Data$Videos$videoList = _List_fromArray(
-	[
-		{q: 'Carnet de bord du projet - septembre 2018', r: '3 septembre 2018', u: 'https://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_540,w_540,f_auto,q_auto/v1/1436014/Capture_d_e%CC%81cran_2018-09-03_a%CC%80_12.15.53_n3amhy.png', v: 'Nous allons bientôt venir à votre rencontre !', x: 'https://player.vimeo.com/video/287983566?app_id=122963&referrer=http%3A%2F%2Fsite-1436014-7519-8367.strikingly.com%2Fblog%2Fnous-allons-bientot-venir-a-votre-rencontre'},
-		{q: 'Guillaume, Villeneuve-Saint-Georges, Val-de-Marne', r: '30 septembre 2018', u: 'https://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_540,w_540,f_auto,q_auto/v1/1436014/BBD11819-94A9-4B89-9812-6C6B5977FBA6_qmuwkt.jpg', v: 'Partie 2 : aménager sa classe pour co-enseigner', x: 'https://player.vimeo.com/video/292558103?app_id=122963&referrer=http%3A%2F%2Fsite-1436014-7519-8367.strikingly.com%2Fblog%2Fpartie-2-amenager-sa-classe-pour-co-enseigner'},
-		{q: 'Guillaume, Villeneuve-Saint-Georges, Val-de-Marne', r: '30 septembre 2018', u: 'https://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_540,w_540,f_auto,q_auto/v1/1436014/57656A46-9A9D-40DD-813F-44F663CB9D43_bticei.jpg', v: 'Partie 1 : aménager sa classe pour co-enseigner.', x: '//cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fplayer.vimeo.com%2Fvideo%2F292557899%3Fapp_id%3D122963&dntp=1&wmode=transparent&url=https%3A%2F%2Fvimeo.com%2F292557899&image=https%3A%2F%2Fi.vimeocdn.com%2Fvideo%2F728976429_960.jpg&key=0ae70bf4c11f11e09f134040d3dc5c07&type=text%2Fhtml&schema=vimeo'},
-		{q: 'Nous avons concocté pour vous un petit tutoriel afin de vous aider à produire vos propres vidéos. Vous allez voir, c’est très facile!', r: '26 septembre 2018', u: 'https://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_540,w_540,f_auto,q_auto/v1/1436014/05ABBF87-8D49-4698-9457-38C8378C52EE_bnyabf.jpg', v: 'Tuto : produire une vidéo, rien de plus simple!', x: 'https://player.vimeo.com/video/291862243?app_id=122963&referrer=http%3A%2F%2Fsite-1436014-7519-8367.strikingly.com%2Fblog%2Ftuto-produire-une-video-rien-de-plus-simple'},
-		{q: 'Vidéo réalisée par Bruna, enseignante à Orly', r: '24 septembre 2018', u: 'https://i.vimeocdn.com/video/727670185_960.jpg', v: 'Vers la classe flexible', x: 'https://player.vimeo.com/video/291511500?app_id=122963&referrer=http%3A%2F%2Fsite-1436014-7519-8367.strikingly.com%2Fblog%2Fvers-la-classe-flexible'},
-		{q: 'Vidéo réalisée par Audrey, enseignante à Versailles', r: '24 septembre 2018', u: 'https://i.vimeocdn.com/video/726053190_960.jpg', v: 'La fabrique de phrases', x: 'https://player.vimeo.com/video/290227019?app_id=122963&referrer=http%3A%2F%2Fsite-1436014-7519-8367.strikingly.com%2Fblog%2Fla-fabrique-de-phrases'},
-		{q: '', r: '21 septembre 2018', u: 'https://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_540,w_540,f_auto,q_auto/v1/1436014/Capture_d_e%CC%81cran_2018-09-21_a%CC%80_19.31.44_r8b7xc.png', v: 'La boîte aux trésors du lecteur', x: 'https://player.vimeo.com/video/291124509?app_id=122963&referrer=http%3A%2F%2Fsite-1436014-7519-8367.strikingly.com%2Fblog%2Fla-boite-aux-tresors-du-lecteur'},
-		{q: '', r: '21 septembre 2018', u: 'https://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_540,w_540,f_auto,q_auto/v1/1436014/Capture_d_e%CC%81cran_2018-09-21_a%CC%80_19.35.50_vzbuw7.png', v: 'Le mur des fiertés', x: 'https://player.vimeo.com/video/291120261?app_id=122963&referrer=http%3A%2F%2Fsite-1436014-7519-8367.strikingly.com%2Fblog%2Fle-mur-des-fiertes'}
-	]);
-var author$project$Page$Home$init = function (session) {
+var author$project$Page$About$init = function (session) {
 	return _Utils_Tuple2(
-		{ap: author$project$Data$Videos$videoList},
+		{},
 		elm$core$Platform$Cmd$none);
 };
-var elm$core$Platform$Cmd$map = _Platform_map;
-var author$project$Main$setRoute = F2(
-	function (maybeRoute, model) {
-		var toPage = F3(
-			function (page, subInit, subMsg) {
-				var _n3 = subInit(model.C);
-				var subModel = _n3.a;
-				var subCmds = _n3.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							n: page(subModel)
-						}),
-					A2(elm$core$Platform$Cmd$map, subMsg, subCmds));
-			});
-		if (maybeRoute.$ === 1) {
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{n: author$project$Main$NotFound}),
-				elm$core$Platform$Cmd$none);
-		} else {
-			if (!maybeRoute.a) {
-				var _n1 = maybeRoute.a;
-				return A3(toPage, author$project$Main$HomePage, author$project$Page$Home$init, author$project$Main$HomeMsg);
-			} else {
-				var _n2 = maybeRoute.a;
-				return A3(toPage, author$project$Main$CounterPage, author$project$Page$Counter$init, author$project$Main$CounterMsg);
-			}
-		}
-	});
-var author$project$Route$Counter = 1;
-var author$project$Route$Home = 0;
-var elm$core$Basics$identity = function (x) {
-	return x;
+var author$project$Page$Home$init = function (session) {
+	return _Utils_Tuple2(
+		{},
+		elm$core$Platform$Cmd$none);
 };
-var elm$core$List$foldrHelper = F4(
-	function (fn, acc, ctr, ls) {
-		if (!ls.b) {
-			return acc;
-		} else {
-			var a = ls.a;
-			var r1 = ls.b;
-			if (!r1.b) {
-				return A2(fn, a, acc);
-			} else {
-				var b = r1.a;
-				var r2 = r1.b;
-				if (!r2.b) {
-					return A2(
-						fn,
-						a,
-						A2(fn, b, acc));
-				} else {
-					var c = r2.a;
-					var r3 = r2.b;
-					if (!r3.b) {
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(fn, c, acc)));
-					} else {
-						var d = r3.a;
-						var r4 = r3.b;
-						var res = (ctr > 500) ? A3(
-							elm$core$List$foldl,
-							fn,
-							acc,
-							elm$core$List$reverse(r4)) : A4(elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(
-									fn,
-									c,
-									A2(fn, d, res))));
-					}
-				}
-			}
-		}
-	});
-var elm$core$List$foldr = F3(
-	function (fn, acc, ls) {
-		return A4(elm$core$List$foldrHelper, fn, acc, 0, ls);
-	});
-var elm$core$List$map = F2(
-	function (f, xs) {
-		return A3(
-			elm$core$List$foldr,
-			F2(
-				function (x, acc) {
-					return A2(
-						elm$core$List$cons,
-						f(x),
-						acc);
-				}),
-			_List_Nil,
-			xs);
-	});
-var elm$url$Url$Parser$Parser = elm$core$Basics$identity;
-var elm$url$Url$Parser$State = F5(
-	function (visited, unvisited, params, frag, value) {
-		return {y: frag, A: params, w: unvisited, o: value, D: visited};
-	});
-var elm$url$Url$Parser$mapState = F2(
-	function (func, _n0) {
-		var visited = _n0.D;
-		var unvisited = _n0.w;
-		var params = _n0.A;
-		var frag = _n0.y;
-		var value = _n0.o;
-		return A5(
-			elm$url$Url$Parser$State,
-			visited,
-			unvisited,
-			params,
-			frag,
-			func(value));
-	});
-var elm$url$Url$Parser$map = F2(
-	function (subValue, _n0) {
-		var parseArg = _n0;
-		return function (_n1) {
-			var visited = _n1.D;
-			var unvisited = _n1.w;
-			var params = _n1.A;
-			var frag = _n1.y;
-			var value = _n1.o;
-			return A2(
-				elm$core$List$map,
-				elm$url$Url$Parser$mapState(value),
-				parseArg(
-					A5(elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
-		};
-	});
-var elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
-		}
-	});
-var elm$core$List$concat = function (lists) {
-	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
+var author$project$Page$Newsletter$init = function (session) {
+	return _Utils_Tuple2(
+		{},
+		elm$core$Platform$Cmd$none);
 };
-var elm$core$List$concatMap = F2(
-	function (f, list) {
-		return elm$core$List$concat(
-			A2(elm$core$List$map, f, list));
-	});
-var elm$url$Url$Parser$oneOf = function (parsers) {
-	return function (state) {
-		return A2(
-			elm$core$List$concatMap,
-			function (_n0) {
-				var parser = _n0;
-				return parser(state);
-			},
-			parsers);
-	};
+var author$project$Page$Participate$init = function (session) {
+	return _Utils_Tuple2(
+		{},
+		elm$core$Platform$Cmd$none);
 };
-var elm$url$Url$Parser$s = function (str) {
-	return function (_n0) {
-		var visited = _n0.D;
-		var unvisited = _n0.w;
-		var params = _n0.A;
-		var frag = _n0.y;
-		var value = _n0.o;
-		if (!unvisited.b) {
-			return _List_Nil;
-		} else {
-			var next = unvisited.a;
-			var rest = unvisited.b;
-			return _Utils_eq(next, str) ? _List_fromArray(
-				[
-					A5(
-					elm$url$Url$Parser$State,
-					A2(elm$core$List$cons, next, visited),
-					rest,
-					params,
-					frag,
-					value)
-				]) : _List_Nil;
-		}
-	};
-};
-var elm$url$Url$Parser$top = function (state) {
-	return _List_fromArray(
-		[state]);
-};
-var author$project$Route$parser = elm$url$Url$Parser$oneOf(
-	_List_fromArray(
-		[
-			A2(elm$url$Url$Parser$map, 0, elm$url$Url$Parser$top),
-			A2(
-			elm$url$Url$Parser$map,
-			1,
-			elm$url$Url$Parser$s('second-page'))
-		]));
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var elm$url$Url$Parser$getFirstMatch = function (states) {
-	getFirstMatch:
-	while (true) {
-		if (!states.b) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var state = states.a;
-			var rest = states.b;
-			var _n1 = state.w;
-			if (!_n1.b) {
-				return elm$core$Maybe$Just(state.o);
-			} else {
-				if ((_n1.a === '') && (!_n1.b.b)) {
-					return elm$core$Maybe$Just(state.o);
-				} else {
-					var $temp$states = rest;
-					states = $temp$states;
-					continue getFirstMatch;
-				}
-			}
-		}
-	}
-};
-var elm$url$Url$Parser$removeFinalEmpty = function (segments) {
-	if (!segments.b) {
-		return _List_Nil;
-	} else {
-		if ((segments.a === '') && (!segments.b.b)) {
-			return _List_Nil;
-		} else {
-			var segment = segments.a;
-			var rest = segments.b;
-			return A2(
-				elm$core$List$cons,
-				segment,
-				elm$url$Url$Parser$removeFinalEmpty(rest));
-		}
-	}
-};
-var elm$url$Url$Parser$preparePath = function (path) {
-	var _n0 = A2(elm$core$String$split, '/', path);
-	if (_n0.b && (_n0.a === '')) {
-		var segments = _n0.b;
-		return elm$url$Url$Parser$removeFinalEmpty(segments);
-	} else {
-		var segments = _n0;
-		return elm$url$Url$Parser$removeFinalEmpty(segments);
-	}
-};
+var elm$http$Http$Internal$EmptyBody = {$: 0};
+var elm$http$Http$emptyBody = elm$http$Http$Internal$EmptyBody;
 var elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
 var elm$core$Basics$compare = _Utils_compare;
@@ -5598,134 +5533,142 @@ var elm$core$Dict$update = F3(
 			return A2(elm$core$Dict$remove, targetKey, dictionary);
 		}
 	});
-var elm$url$Url$percentDecode = _Url_percentDecode;
-var elm$url$Url$Parser$addToParametersHelp = F2(
-	function (value, maybeList) {
-		if (maybeList.$ === 1) {
-			return elm$core$Maybe$Just(
-				_List_fromArray(
-					[value]));
-		} else {
-			var list = maybeList.a;
-			return elm$core$Maybe$Just(
-				A2(elm$core$List$cons, value, list));
-		}
-	});
-var elm$url$Url$Parser$addParam = F2(
-	function (segment, dict) {
-		var _n0 = A2(elm$core$String$split, '=', segment);
-		if ((_n0.b && _n0.b.b) && (!_n0.b.b.b)) {
-			var rawKey = _n0.a;
-			var _n1 = _n0.b;
-			var rawValue = _n1.a;
-			var _n2 = elm$url$Url$percentDecode(rawKey);
-			if (_n2.$ === 1) {
-				return dict;
-			} else {
-				var key = _n2.a;
-				var _n3 = elm$url$Url$percentDecode(rawValue);
-				if (_n3.$ === 1) {
-					return dict;
-				} else {
-					var value = _n3.a;
-					return A3(
-						elm$core$Dict$update,
-						key,
-						elm$url$Url$Parser$addToParametersHelp(value),
-						dict);
-				}
-			}
-		} else {
-			return dict;
-		}
-	});
-var elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
-	if (maybeQuery.$ === 1) {
-		return elm$core$Dict$empty;
+var elm$core$Maybe$isJust = function (maybe) {
+	if (!maybe.$) {
+		return true;
 	} else {
-		var qry = maybeQuery.a;
-		return A3(
-			elm$core$List$foldr,
-			elm$url$Url$Parser$addParam,
-			elm$core$Dict$empty,
-			A2(elm$core$String$split, '&', qry));
+		return false;
 	}
 };
-var elm$url$Url$Parser$parse = F2(
-	function (_n0, url) {
-		var parser = _n0;
-		return elm$url$Url$Parser$getFirstMatch(
-			parser(
-				A5(
-					elm$url$Url$Parser$State,
-					_List_Nil,
-					elm$url$Url$Parser$preparePath(url.bg),
-					elm$url$Url$Parser$prepareQuery(url.aL),
-					url.ay,
-					elm$core$Basics$identity)));
+var elm$core$Result$map = F2(
+	function (func, ra) {
+		if (!ra.$) {
+			var a = ra.a;
+			return elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return elm$core$Result$Err(e);
+		}
 	});
-var author$project$Route$fromUrl = function (url) {
-	return A2(
-		elm$url$Url$Parser$parse,
-		author$project$Route$parser,
-		_Utils_update(
-			url,
-			{
-				ay: elm$core$Maybe$Nothing,
-				bg: A2(elm$core$Maybe$withDefault, '', url.ay)
-			}));
+var elm$http$Http$BadPayload = F2(
+	function (a, b) {
+		return {$: 4, a: a, b: b};
+	});
+var elm$http$Http$BadStatus = function (a) {
+	return {$: 3, a: a};
 };
-var author$project$Main$init = F3(
-	function (flags, url, navKey) {
-		var session = {};
-		return A2(
-			author$project$Main$setRoute,
-			author$project$Route$fromUrl(url),
-			{Q: false, aj: navKey, n: author$project$Main$Blank, C: session});
-	});
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
-var author$project$Main$subscriptions = function (model) {
-	var _n0 = model.n;
-	switch (_n0.$) {
-		case 1:
-			return elm$core$Platform$Sub$none;
-		case 2:
-			return elm$core$Platform$Sub$none;
-		case 3:
-			return elm$core$Platform$Sub$none;
-		default:
-			return elm$core$Platform$Sub$none;
-	}
-};
-var author$project$Page$Counter$update = F3(
-	function (_n0, msg, model) {
-		return _Utils_Tuple2(model + 1, elm$core$Platform$Cmd$none);
-	});
-var author$project$Page$Home$update = F3(
-	function (_n0, msg, model) {
-		return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-	});
-var elm$browser$Browser$External = function (a) {
-	return {$: 1, a: a};
-};
-var elm$browser$Browser$Internal = function (a) {
+var elm$http$Http$BadUrl = function (a) {
 	return {$: 0, a: a};
 };
-var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
-var elm$core$Basics$never = function (_n0) {
-	never:
-	while (true) {
-		var nvr = _n0;
-		var $temp$_n0 = nvr;
-		_n0 = $temp$_n0;
-		continue never;
+var elm$http$Http$NetworkError = {$: 2};
+var elm$http$Http$Timeout = {$: 1};
+var elm$http$Http$Internal$FormDataBody = function (a) {
+	return {$: 2, a: a};
+};
+var elm$http$Http$Internal$isStringBody = function (body) {
+	if (body.$ === 1) {
+		return true;
+	} else {
+		return false;
 	}
 };
+var elm$http$Http$expectStringResponse = _Http_expectStringResponse;
+var elm$http$Http$expectString = elm$http$Http$expectStringResponse(
+	function (response) {
+		return elm$core$Result$Ok(response.aS);
+	});
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
+var elm$http$Http$Internal$Request = elm$core$Basics$identity;
+var elm$http$Http$request = elm$core$Basics$identity;
+var elm$http$Http$getString = function (url) {
+	return elm$http$Http$request(
+		{aS: elm$http$Http$emptyBody, aa: elm$http$Http$expectString, W: _List_Nil, ac: 'GET', ai: elm$core$Maybe$Nothing, bl: url, aj: false});
+};
+var author$project$Request$Vimeo$getRSS = function (_n0) {
+	return elm$http$Http$getString('https://cors.io/?https://vimeo.com/user87116214/videos/rss');
+};
+var elm$core$Platform$Cmd$map = _Platform_map;
+var elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
 var elm$core$Task$Perform = elm$core$Basics$identity;
+var elm$core$Task$andThen = _Scheduler_andThen;
 var elm$core$Task$succeed = _Scheduler_succeed;
 var elm$core$Task$init = elm$core$Task$succeed(0);
-var elm$core$Task$andThen = _Scheduler_andThen;
+var elm$core$List$foldrHelper = F4(
+	function (fn, acc, ctr, ls) {
+		if (!ls.b) {
+			return acc;
+		} else {
+			var a = ls.a;
+			var r1 = ls.b;
+			if (!r1.b) {
+				return A2(fn, a, acc);
+			} else {
+				var b = r1.a;
+				var r2 = r1.b;
+				if (!r2.b) {
+					return A2(
+						fn,
+						a,
+						A2(fn, b, acc));
+				} else {
+					var c = r2.a;
+					var r3 = r2.b;
+					if (!r3.b) {
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(fn, c, acc)));
+					} else {
+						var d = r3.a;
+						var r4 = r3.b;
+						var res = (ctr > 500) ? A3(
+							elm$core$List$foldl,
+							fn,
+							acc,
+							elm$core$List$reverse(r4)) : A4(elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(
+									fn,
+									c,
+									A2(fn, d, res))));
+					}
+				}
+			}
+		}
+	});
+var elm$core$List$foldr = F3(
+	function (fn, acc, ls) {
+		return A4(elm$core$List$foldrHelper, fn, acc, 0, ls);
+	});
+var elm$core$List$map = F2(
+	function (f, xs) {
+		return A3(
+			elm$core$List$foldr,
+			F2(
+				function (x, acc) {
+					return A2(
+						elm$core$List$cons,
+						f(x),
+						acc);
+				}),
+			_List_Nil,
+			xs);
+	});
 var elm$core$Task$map = F2(
 	function (func, taskA) {
 		return A2(
@@ -5792,6 +5735,462 @@ var elm$core$Task$cmdMap = F2(
 	});
 _Platform_effectManagers['Task'] = _Platform_createManager(elm$core$Task$init, elm$core$Task$onEffects, elm$core$Task$onSelfMsg, elm$core$Task$cmdMap);
 var elm$core$Task$command = _Platform_leaf('Task');
+var elm$core$Task$onError = _Scheduler_onError;
+var elm$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return elm$core$Task$command(
+			A2(
+				elm$core$Task$onError,
+				A2(
+					elm$core$Basics$composeL,
+					A2(elm$core$Basics$composeL, elm$core$Task$succeed, resultToMessage),
+					elm$core$Result$Err),
+				A2(
+					elm$core$Task$andThen,
+					A2(
+						elm$core$Basics$composeL,
+						A2(elm$core$Basics$composeL, elm$core$Task$succeed, resultToMessage),
+						elm$core$Result$Ok),
+					task)));
+	});
+var elm$http$Http$toTask = function (_n0) {
+	var request_ = _n0;
+	return A2(_Http_toTask, request_, elm$core$Maybe$Nothing);
+};
+var elm$http$Http$send = F2(
+	function (resultToMessage, request_) {
+		return A2(
+			elm$core$Task$attempt,
+			resultToMessage,
+			elm$http$Http$toTask(request_));
+	});
+var author$project$Main$setRoute = F2(
+	function (maybeRoute, model) {
+		var toPage = F3(
+			function (page, subInit, subMsg) {
+				var _n6 = subInit(model.f);
+				var subModel = _n6.a;
+				var subCmds = _n6.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							n: page(subModel)
+						}),
+					A2(elm$core$Platform$Cmd$map, subMsg, subCmds));
+			});
+		if (maybeRoute.$ === 1) {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{n: author$project$Main$NotFound}),
+				elm$core$Platform$Cmd$none);
+		} else {
+			switch (maybeRoute.a) {
+				case 0:
+					var _n1 = maybeRoute.a;
+					var _n2 = A3(toPage, author$project$Main$HomePage, author$project$Page$Home$init, author$project$Main$HomeMsg);
+					var homeModel = _n2.a;
+					var commands = _n2.b;
+					return _Utils_Tuple2(
+						homeModel,
+						elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[
+									commands,
+									A2(
+									elm$http$Http$send,
+									author$project$Main$VideoListReceived,
+									author$project$Request$Vimeo$getRSS(model.f))
+								])));
+				case 1:
+					var _n3 = maybeRoute.a;
+					return A3(toPage, author$project$Main$AboutPage, author$project$Page$About$init, author$project$Main$AboutMsg);
+				case 2:
+					var _n4 = maybeRoute.a;
+					return A3(toPage, author$project$Main$ParticipatePage, author$project$Page$Participate$init, author$project$Main$ParticipateMsg);
+				default:
+					var _n5 = maybeRoute.a;
+					return A3(toPage, author$project$Main$NewsletterPage, author$project$Page$Newsletter$init, author$project$Main$NewsletterMsg);
+			}
+		}
+	});
+var author$project$Route$About = 1;
+var author$project$Route$Home = 0;
+var author$project$Route$Newsletter = 3;
+var author$project$Route$Participate = 2;
+var elm$url$Url$Parser$Parser = elm$core$Basics$identity;
+var elm$url$Url$Parser$State = F5(
+	function (visited, unvisited, params, frag, value) {
+		return {t: frag, v: params, s: unvisited, o: value, x: visited};
+	});
+var elm$url$Url$Parser$mapState = F2(
+	function (func, _n0) {
+		var visited = _n0.x;
+		var unvisited = _n0.s;
+		var params = _n0.v;
+		var frag = _n0.t;
+		var value = _n0.o;
+		return A5(
+			elm$url$Url$Parser$State,
+			visited,
+			unvisited,
+			params,
+			frag,
+			func(value));
+	});
+var elm$url$Url$Parser$map = F2(
+	function (subValue, _n0) {
+		var parseArg = _n0;
+		return function (_n1) {
+			var visited = _n1.x;
+			var unvisited = _n1.s;
+			var params = _n1.v;
+			var frag = _n1.t;
+			var value = _n1.o;
+			return A2(
+				elm$core$List$map,
+				elm$url$Url$Parser$mapState(value),
+				parseArg(
+					A5(elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
+		};
+	});
+var elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
+		}
+	});
+var elm$core$List$concat = function (lists) {
+	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
+};
+var elm$core$List$concatMap = F2(
+	function (f, list) {
+		return elm$core$List$concat(
+			A2(elm$core$List$map, f, list));
+	});
+var elm$url$Url$Parser$oneOf = function (parsers) {
+	return function (state) {
+		return A2(
+			elm$core$List$concatMap,
+			function (_n0) {
+				var parser = _n0;
+				return parser(state);
+			},
+			parsers);
+	};
+};
+var elm$url$Url$Parser$s = function (str) {
+	return function (_n0) {
+		var visited = _n0.x;
+		var unvisited = _n0.s;
+		var params = _n0.v;
+		var frag = _n0.t;
+		var value = _n0.o;
+		if (!unvisited.b) {
+			return _List_Nil;
+		} else {
+			var next = unvisited.a;
+			var rest = unvisited.b;
+			return _Utils_eq(next, str) ? _List_fromArray(
+				[
+					A5(
+					elm$url$Url$Parser$State,
+					A2(elm$core$List$cons, next, visited),
+					rest,
+					params,
+					frag,
+					value)
+				]) : _List_Nil;
+		}
+	};
+};
+var elm$url$Url$Parser$top = function (state) {
+	return _List_fromArray(
+		[state]);
+};
+var author$project$Route$parser = elm$url$Url$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(elm$url$Url$Parser$map, 0, elm$url$Url$Parser$top),
+			A2(
+			elm$url$Url$Parser$map,
+			1,
+			elm$url$Url$Parser$s('about')),
+			A2(
+			elm$url$Url$Parser$map,
+			2,
+			elm$url$Url$Parser$s('participate')),
+			A2(
+			elm$url$Url$Parser$map,
+			3,
+			elm$url$Url$Parser$s('newsletter'))
+		]));
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var elm$url$Url$Parser$getFirstMatch = function (states) {
+	getFirstMatch:
+	while (true) {
+		if (!states.b) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var state = states.a;
+			var rest = states.b;
+			var _n1 = state.s;
+			if (!_n1.b) {
+				return elm$core$Maybe$Just(state.o);
+			} else {
+				if ((_n1.a === '') && (!_n1.b.b)) {
+					return elm$core$Maybe$Just(state.o);
+				} else {
+					var $temp$states = rest;
+					states = $temp$states;
+					continue getFirstMatch;
+				}
+			}
+		}
+	}
+};
+var elm$url$Url$Parser$removeFinalEmpty = function (segments) {
+	if (!segments.b) {
+		return _List_Nil;
+	} else {
+		if ((segments.a === '') && (!segments.b.b)) {
+			return _List_Nil;
+		} else {
+			var segment = segments.a;
+			var rest = segments.b;
+			return A2(
+				elm$core$List$cons,
+				segment,
+				elm$url$Url$Parser$removeFinalEmpty(rest));
+		}
+	}
+};
+var elm$url$Url$Parser$preparePath = function (path) {
+	var _n0 = A2(elm$core$String$split, '/', path);
+	if (_n0.b && (_n0.a === '')) {
+		var segments = _n0.b;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	} else {
+		var segments = _n0;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	}
+};
+var elm$url$Url$percentDecode = _Url_percentDecode;
+var elm$url$Url$Parser$addToParametersHelp = F2(
+	function (value, maybeList) {
+		if (maybeList.$ === 1) {
+			return elm$core$Maybe$Just(
+				_List_fromArray(
+					[value]));
+		} else {
+			var list = maybeList.a;
+			return elm$core$Maybe$Just(
+				A2(elm$core$List$cons, value, list));
+		}
+	});
+var elm$url$Url$Parser$addParam = F2(
+	function (segment, dict) {
+		var _n0 = A2(elm$core$String$split, '=', segment);
+		if ((_n0.b && _n0.b.b) && (!_n0.b.b.b)) {
+			var rawKey = _n0.a;
+			var _n1 = _n0.b;
+			var rawValue = _n1.a;
+			var _n2 = elm$url$Url$percentDecode(rawKey);
+			if (_n2.$ === 1) {
+				return dict;
+			} else {
+				var key = _n2.a;
+				var _n3 = elm$url$Url$percentDecode(rawValue);
+				if (_n3.$ === 1) {
+					return dict;
+				} else {
+					var value = _n3.a;
+					return A3(
+						elm$core$Dict$update,
+						key,
+						elm$url$Url$Parser$addToParametersHelp(value),
+						dict);
+				}
+			}
+		} else {
+			return dict;
+		}
+	});
+var elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
+	if (maybeQuery.$ === 1) {
+		return elm$core$Dict$empty;
+	} else {
+		var qry = maybeQuery.a;
+		return A3(
+			elm$core$List$foldr,
+			elm$url$Url$Parser$addParam,
+			elm$core$Dict$empty,
+			A2(elm$core$String$split, '&', qry));
+	}
+};
+var elm$url$Url$Parser$parse = F2(
+	function (_n0, url) {
+		var parser = _n0;
+		return elm$url$Url$Parser$getFirstMatch(
+			parser(
+				A5(
+					elm$url$Url$Parser$State,
+					_List_Nil,
+					elm$url$Url$Parser$preparePath(url.bb),
+					elm$url$Url$Parser$prepareQuery(url.aE),
+					url.ar,
+					elm$core$Basics$identity)));
+	});
+var author$project$Route$fromUrl = function (url) {
+	return A2(
+		elm$url$Url$Parser$parse,
+		author$project$Route$parser,
+		_Utils_update(
+			url,
+			{
+				ar: elm$core$Maybe$Nothing,
+				bb: A2(elm$core$Maybe$withDefault, '', url.ar)
+			}));
+};
+var author$project$Main$init = F3(
+	function (flags, url, navKey) {
+		var session = {bm: author$project$Data$Session$Fetching};
+		return A2(
+			author$project$Main$setRoute,
+			author$project$Route$fromUrl(url),
+			{
+				K: false,
+				ad: navKey,
+				n: author$project$Main$HomePage(
+					function (_n0) {
+						var model = _n0.a;
+						return model;
+					}(
+						author$project$Page$Home$init(session))),
+				f: session
+			});
+	});
+var author$project$Data$Session$Video = F6(
+	function (description, link, player, pubDate, thumbnail, title) {
+		return {aY: description, a5: link, bc: player, bd: pubDate, bi: thumbnail, bj: title};
+	});
+var elm$json$Json$Decode$field = _Json_decodeField;
+var elm$json$Json$Decode$map6 = _Json_map6;
+var elm$json$Json$Decode$string = _Json_decodeString;
+var author$project$Data$Session$videoDecoder = A7(
+	elm$json$Json$Decode$map6,
+	author$project$Data$Session$Video,
+	A2(elm$json$Json$Decode$field, 'description', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'link', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'player', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'pubDate', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'thumbnail', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string));
+var elm$json$Json$Decode$decodeValue = _Json_run;
+var elm$json$Json$Decode$list = _Json_decodeList;
+var author$project$Data$Session$decodeVideoList = elm$json$Json$Decode$decodeValue(
+	elm$json$Json$Decode$list(author$project$Data$Session$videoDecoder));
+var author$project$Main$VideoListParsed = function (a) {
+	return {$: 9, a: a};
+};
+var elm$json$Json$Decode$value = _Json_decodeValue;
+var author$project$Main$parsedVideoList = _Platform_incomingPort('parsedVideoList', elm$json$Json$Decode$value);
+var elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var elm$core$Platform$Sub$batch = _Platform_batch;
+var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
+var author$project$Main$subscriptions = function (model) {
+	return elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				author$project$Main$parsedVideoList(
+				A2(elm$core$Basics$composeR, author$project$Data$Session$decodeVideoList, author$project$Main$VideoListParsed)),
+				function () {
+				var _n0 = model.n;
+				switch (_n0.$) {
+					case 0:
+						return elm$core$Platform$Sub$none;
+					case 1:
+						return elm$core$Platform$Sub$none;
+					case 2:
+						return elm$core$Platform$Sub$none;
+					case 3:
+						return elm$core$Platform$Sub$none;
+					default:
+						return elm$core$Platform$Sub$none;
+				}
+			}()
+			]));
+};
+var author$project$Data$Session$Error = function (a) {
+	return {$: 2, a: a};
+};
+var author$project$Data$Session$Received = function (a) {
+	return {$: 1, a: a};
+};
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Main$parseRSS = _Platform_outgoingPort('parseRSS', elm$json$Json$Encode$string);
+var author$project$Page$About$update = F3(
+	function (_n0, msg, model) {
+		return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+	});
+var author$project$Page$Home$update = F3(
+	function (_n0, msg, model) {
+		return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+	});
+var author$project$Page$Newsletter$update = F3(
+	function (_n0, msg, model) {
+		return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+	});
+var author$project$Page$Participate$update = F3(
+	function (_n0, msg, model) {
+		return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+	});
+var author$project$Request$Vimeo$errorToString = function (error) {
+	switch (error.$) {
+		case 0:
+			return 'Bad url.';
+		case 1:
+			return 'Request timed out.';
+		case 2:
+			return 'Network error. Are you online?';
+		case 3:
+			var response = error.a;
+			return 'HTTP error ' + elm$core$String$fromInt(response.bf.aX);
+		default:
+			return 'Unable to parse response body.';
+	}
+};
+var elm$browser$Browser$External = function (a) {
+	return {$: 1, a: a};
+};
+var elm$browser$Browser$Internal = function (a) {
+	return {$: 0, a: a};
+};
+var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
+var elm$core$Basics$never = function (_n0) {
+	never:
+	while (true) {
+		var nvr = _n0;
+		var $temp$_n0 = nvr;
+		_n0 = $temp$_n0;
+		continue never;
+	}
+};
 var elm$core$Task$perform = F2(
 	function (toMessage, task) {
 		return elm$core$Task$command(
@@ -5837,7 +6236,7 @@ var elm$core$String$contains = _String_contains;
 var elm$core$String$toInt = _String_toInt;
 var elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {ay: fragment, aB: host, bg: path, aH: port_, aK: protocol, aL: query};
+		return {ar: fragment, au: host, bb: path, aA: port_, aD: protocol, aE: query};
 	});
 var elm$url$Url$chompBeforePath = F5(
 	function (protocol, path, params, frag, str) {
@@ -5966,7 +6365,7 @@ var elm$url$Url$addPrefixed = F3(
 	});
 var elm$url$Url$toString = function (url) {
 	var http = function () {
-		var _n0 = url.aK;
+		var _n0 = url.aD;
 		if (!_n0) {
 			return 'http://';
 		} else {
@@ -5976,22 +6375,22 @@ var elm$url$Url$toString = function (url) {
 	return A3(
 		elm$url$Url$addPrefixed,
 		'#',
-		url.ay,
+		url.ar,
 		A3(
 			elm$url$Url$addPrefixed,
 			'?',
-			url.aL,
+			url.aE,
 			_Utils_ap(
 				A2(
 					elm$url$Url$addPort,
-					url.aH,
-					_Utils_ap(http, url.aB)),
-				url.bg)));
+					url.aA,
+					_Utils_ap(http, url.au)),
+				url.bb)));
 };
 var author$project$Main$update = F2(
 	function (msg, model) {
 		var page = model.n;
-		var session = model.C;
+		var session = model.f;
 		var toPage = F5(
 			function (toModel, toMsg, subUpdate, subMsg, subModel) {
 				var _n4 = A2(subUpdate, subMsg, subModel);
@@ -6006,14 +6405,14 @@ var author$project$Main$update = F2(
 					A2(elm$core$Platform$Cmd$map, toMsg, newCmd));
 			});
 		var _n0 = _Utils_Tuple2(msg, page);
-		_n0$6:
+		_n0$12:
 		while (true) {
-			_n0$7:
+			_n0$13:
 			while (true) {
 				switch (_n0.a.$) {
 					case 0:
 						switch (_n0.b.$) {
-							case 1:
+							case 0:
 								var homeMsg = _n0.a.a;
 								var homeModel = _n0.b.a;
 								return A5(
@@ -6023,32 +6422,66 @@ var author$project$Main$update = F2(
 									author$project$Page$Home$update(session),
 									homeMsg,
 									homeModel);
-							case 3:
-								break _n0$6;
+							case 4:
+								break _n0$12;
 							default:
-								break _n0$7;
+								break _n0$13;
 						}
 					case 1:
 						switch (_n0.b.$) {
-							case 2:
-								var counterMsg = _n0.a.a;
-								var counterModel = _n0.b.a;
+							case 1:
+								var aboutMsg = _n0.a.a;
+								var aboutModel = _n0.b.a;
 								return A5(
 									toPage,
-									author$project$Main$CounterPage,
-									author$project$Main$CounterMsg,
-									author$project$Page$Counter$update(session),
-									counterMsg,
-									counterModel);
-							case 3:
-								break _n0$6;
+									author$project$Main$AboutPage,
+									author$project$Main$AboutMsg,
+									author$project$Page$About$update(session),
+									aboutMsg,
+									aboutModel);
+							case 4:
+								break _n0$12;
 							default:
-								break _n0$7;
+								break _n0$13;
 						}
 					case 2:
+						switch (_n0.b.$) {
+							case 2:
+								var participateMsg = _n0.a.a;
+								var participateModel = _n0.b.a;
+								return A5(
+									toPage,
+									author$project$Main$ParticipatePage,
+									author$project$Main$ParticipateMsg,
+									author$project$Page$Participate$update(session),
+									participateMsg,
+									participateModel);
+							case 4:
+								break _n0$12;
+							default:
+								break _n0$13;
+						}
+					case 3:
+						switch (_n0.b.$) {
+							case 3:
+								var newsletterMsg = _n0.a.a;
+								var newsletterModel = _n0.b.a;
+								return A5(
+									toPage,
+									author$project$Main$NewsletterPage,
+									author$project$Main$NewsletterMsg,
+									author$project$Page$Newsletter$update(session),
+									newsletterMsg,
+									newsletterModel);
+							case 4:
+								break _n0$12;
+							default:
+								break _n0$13;
+						}
+					case 4:
 						var route = _n0.a.a;
 						return A2(author$project$Main$setRoute, route, model);
-					case 4:
+					case 6:
 						var urlRequest = _n0.a.a;
 						if (!urlRequest.$) {
 							var url = urlRequest.a;
@@ -6056,7 +6489,7 @@ var author$project$Main$update = F2(
 								model,
 								A2(
 									elm$browser$Browser$Navigation$pushUrl,
-									model.aj,
+									model.ad,
 									elm$url$Url$toString(url)));
 						} else {
 							var href = urlRequest.a;
@@ -6064,19 +6497,72 @@ var author$project$Main$update = F2(
 								model,
 								elm$browser$Browser$Navigation$load(href));
 						}
-					case 3:
+					case 5:
 						var url = _n0.a.a;
 						return A2(
 							author$project$Main$setRoute,
 							author$project$Route$fromUrl(url),
 							model);
-					default:
+					case 7:
 						var _n2 = _n0.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{Q: !model.Q}),
+								{K: !model.K}),
 							elm$core$Platform$Cmd$none);
+					case 8:
+						if (!_n0.a.a.$) {
+							var rss = _n0.a.a.a;
+							return _Utils_Tuple2(
+								model,
+								author$project$Main$parseRSS(rss));
+						} else {
+							var error = _n0.a.a.a;
+							var modelSession = model.f;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										f: _Utils_update(
+											modelSession,
+											{
+												bm: author$project$Data$Session$Error(
+													author$project$Request$Vimeo$errorToString(error))
+											})
+									}),
+								elm$core$Platform$Cmd$none);
+						}
+					default:
+						if (!_n0.a.a.$) {
+							var videoList = _n0.a.a.a;
+							var modelSession = model.f;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										f: _Utils_update(
+											modelSession,
+											{
+												bm: author$project$Data$Session$Received(videoList)
+											})
+									}),
+								elm$core$Platform$Cmd$none);
+						} else {
+							var error = _n0.a.a.a;
+							var modelSession = model.f;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										f: _Utils_update(
+											modelSession,
+											{
+												bm: author$project$Data$Session$Error(
+													elm$json$Json$Decode$errorToString(error))
+											})
+									}),
+								elm$core$Platform$Cmd$none);
+						}
 				}
 			}
 			return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
@@ -6088,20 +6574,10 @@ var author$project$Main$update = F2(
 				{n: author$project$Main$NotFound}),
 			elm$core$Platform$Cmd$none);
 	});
-var author$project$Main$BurgerClicked = {$: 5};
-var author$project$Page$Counter$Inc = 0;
-var author$project$Route$toString = function (route) {
-	var pieces = function () {
-		if (!route) {
-			return _List_Nil;
-		} else {
-			return _List_fromArray(
-				['second-page']);
-		}
-	}();
-	return '#/' + A2(elm$core$String$join, '/', pieces);
-};
-var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Main$BurgerClicked = {$: 7};
+var elm$html$Html$div = _VirtualDom_node('div');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -6109,109 +6585,37 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			key,
 			elm$json$Json$Encode$string(string));
 	});
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var author$project$Page$About$view = F2(
+	function (_n0, model) {
+		return _Utils_Tuple2(
+			'Classe à 12 ?',
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('row columns is-multiline')
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text('#the about page here#')
+						]))
+				]));
+	});
+var elm$html$Html$a = _VirtualDom_node('a');
+var elm$html$Html$figure = _VirtualDom_node('figure');
+var elm$html$Html$img = _VirtualDom_node('img');
+var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$p = _VirtualDom_node('p');
+var elm$html$Html$Attributes$alt = elm$html$Html$Attributes$stringProperty('alt');
 var elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		elm$html$Html$Attributes$stringProperty,
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var author$project$Route$href = function (route) {
-	return elm$html$Html$Attributes$href(
-		author$project$Route$toString(route));
-};
-var elm$html$Html$a = _VirtualDom_node('a');
-var elm$html$Html$button = _VirtualDom_node('button');
-var elm$html$Html$h1 = _VirtualDom_node('h1');
-var elm$html$Html$p = _VirtualDom_node('p');
-var elm$html$Html$strong = _VirtualDom_node('strong');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 0, a: a};
-};
-var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
-};
-var author$project$Page$Counter$view = F2(
-	function (_n0, model) {
-		return _Utils_Tuple2(
-			'Second Page',
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$h1,
-					_List_Nil,
-					_List_fromArray(
-						[
-							elm$html$Html$text('Second page')
-						])),
-					A2(
-					elm$html$Html$p,
-					_List_Nil,
-					_List_fromArray(
-						[
-							elm$html$Html$text('This is the second page, featuring a counter.')
-						])),
-					A2(
-					elm$html$Html$p,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							elm$html$Html$button,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('counter-buttons'),
-									elm$html$Html$Events$onClick(0)
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text('+')
-								])),
-							A2(
-							elm$html$Html$strong,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(
-									elm$core$String$fromInt(model))
-								]))
-						])),
-					A2(
-					elm$html$Html$p,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							elm$html$Html$a,
-							_List_fromArray(
-								[
-									author$project$Route$href(0)
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text('Back home')
-								]))
-						]))
-				]));
-	});
-var elm$html$Html$div = _VirtualDom_node('div');
-var elm$html$Html$figure = _VirtualDom_node('figure');
-var elm$html$Html$img = _VirtualDom_node('img');
-var elm$html$Html$input = _VirtualDom_node('input');
-var elm$html$Html$Attributes$alt = elm$html$Html$Attributes$stringProperty('alt');
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
 var elm$html$Html$Attributes$src = function (url) {
 	return A2(
@@ -6220,17 +6624,22 @@ var elm$html$Html$Attributes$src = function (url) {
 		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
 var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
-var author$project$Page$Home$view = F2(
-	function (_n0, model) {
-		return _Utils_Tuple2(
-			'Liste des vidéos',
+var author$project$Page$Home$viewVideoList = function (videoList) {
+	return _List_fromArray(
+		[
+			A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('box')
+				]),
 			_List_fromArray(
 				[
 					A2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('box')
+							elm$html$Html$Attributes$class('field has-addons')
 						]),
 					_List_fromArray(
 						[
@@ -6238,71 +6647,71 @@ var author$project$Page$Home$view = F2(
 							elm$html$Html$div,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$class('field has-addons')
+									elm$html$Html$Attributes$class('control is-expanded')
 								]),
 							_List_fromArray(
 								[
 									A2(
-									elm$html$Html$div,
+									elm$html$Html$input,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$class('control is-expanded')
+											elm$html$Html$Attributes$class('input'),
+											elm$html$Html$Attributes$type_('search'),
+											elm$html$Html$Attributes$placeholder('Search video titles')
 										]),
-									_List_fromArray(
-										[
-											A2(
-											elm$html$Html$input,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('input'),
-													elm$html$Html$Attributes$type_('search'),
-													elm$html$Html$Attributes$placeholder('Search video titles')
-												]),
-											_List_Nil)
-										])),
+									_List_Nil)
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('control')
+								]),
+							_List_fromArray(
+								[
 									A2(
-									elm$html$Html$div,
+									elm$html$Html$a,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$class('control')
+											elm$html$Html$Attributes$class('button is-info')
 										]),
 									_List_fromArray(
 										[
-											A2(
-											elm$html$Html$a,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('button is-info')
-												]),
-											_List_fromArray(
-												[
-													elm$html$Html$text('Search')
-												]))
+											elm$html$Html$text('Search')
 										]))
 								]))
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('row columns is-multiline')
-						]),
-					A2(
-						elm$core$List$map,
-						function (video) {
-							return A2(
-								elm$html$Html$div,
+						]))
+				])),
+			A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('row columns is-multiline')
+				]),
+			A2(
+				elm$core$List$map,
+				function (video) {
+					return A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('column is-one-quarter')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$a,
 								_List_fromArray(
 									[
-										elm$html$Html$Attributes$class('column is-one-quarter')
+										elm$html$Html$Attributes$href(video.a5)
 									]),
 								_List_fromArray(
 									[
 										A2(
-										elm$html$Html$a,
+										elm$html$Html$div,
 										_List_fromArray(
 											[
-												elm$html$Html$Attributes$href(video.x)
+												elm$html$Html$Attributes$class('card large round')
 											]),
 										_List_fromArray(
 											[
@@ -6310,7 +6719,33 @@ var author$project$Page$Home$view = F2(
 												elm$html$Html$div,
 												_List_fromArray(
 													[
-														elm$html$Html$Attributes$class('card large round')
+														elm$html$Html$Attributes$class('card-image ')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														elm$html$Html$figure,
+														_List_fromArray(
+															[
+																elm$html$Html$Attributes$class('image')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																elm$html$Html$img,
+																_List_fromArray(
+																	[
+																		elm$html$Html$Attributes$src(video.bi),
+																		elm$html$Html$Attributes$alt('Thumbnail of the video titled: ' + video.bj)
+																	]),
+																_List_Nil)
+															]))
+													])),
+												A2(
+												elm$html$Html$div,
+												_List_fromArray(
+													[
+														elm$html$Html$Attributes$class('card-content')
 													]),
 												_List_fromArray(
 													[
@@ -6318,71 +6753,244 @@ var author$project$Page$Home$view = F2(
 														elm$html$Html$div,
 														_List_fromArray(
 															[
-																elm$html$Html$Attributes$class('card-image ')
+																elm$html$Html$Attributes$class('content')
 															]),
 														_List_fromArray(
 															[
+																elm$html$Html$text(video.bj),
 																A2(
-																elm$html$Html$figure,
+																elm$html$Html$p,
 																_List_fromArray(
 																	[
-																		elm$html$Html$Attributes$class('image')
+																		elm$html$Html$Attributes$class('video-date')
 																	]),
 																_List_fromArray(
 																	[
-																		A2(
-																		elm$html$Html$img,
-																		_List_fromArray(
-																			[
-																				elm$html$Html$Attributes$src(video.u),
-																				elm$html$Html$Attributes$alt('Thumbnail of the video titled: ' + video.v)
-																			]),
-																		_List_Nil)
-																	]))
-															])),
-														A2(
-														elm$html$Html$div,
-														_List_fromArray(
-															[
-																elm$html$Html$Attributes$class('card-content')
-															]),
-														_List_fromArray(
-															[
-																A2(
-																elm$html$Html$div,
-																_List_fromArray(
-																	[
-																		elm$html$Html$Attributes$class('content')
-																	]),
-																_List_fromArray(
-																	[
-																		elm$html$Html$text(video.q),
-																		A2(
-																		elm$html$Html$p,
-																		_List_fromArray(
-																			[
-																				elm$html$Html$Attributes$class('video-date')
-																			]),
-																		_List_fromArray(
-																			[
-																				elm$html$Html$text(video.r)
-																			]))
+																		elm$html$Html$text(video.bd)
 																	]))
 															]))
 													]))
 											]))
-									]));
-						},
-						model.ap))
+									]))
+							]));
+				},
+				videoList))
+		]);
+};
+var author$project$Page$Home$view = F2(
+	function (session, model) {
+		return _Utils_Tuple2(
+			'Liste des vidéos',
+			function () {
+				var _n0 = session.bm;
+				switch (_n0.$) {
+					case 0:
+						return _List_fromArray(
+							[
+								elm$html$Html$text('Chargement des vidéos...')
+							]);
+					case 1:
+						var videoList = _n0.a;
+						return author$project$Page$Home$viewVideoList(videoList);
+					default:
+						var error = _n0.a;
+						return _List_fromArray(
+							[
+								elm$html$Html$text('Erreur lors du chargement des videos: ' + error)
+							]);
+				}
+			}());
+	});
+var author$project$Page$Newsletter$view = F2(
+	function (_n0, model) {
+		return _Utils_Tuple2(
+			'Inscrivez-vous à notre infolettre',
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('row columns is-multiline')
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text('#the newsletter page here#')
+						]))
 				]));
 	});
+var author$project$Page$Participate$view = F2(
+	function (_n0, model) {
+		return _Utils_Tuple2(
+			'Je participe !',
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('row columns is-multiline')
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text('#the participation page here#')
+						]))
+				]));
+	});
+var author$project$Views$Page$About = 1;
 var author$project$Views$Page$Config = F4(
 	function (session, isMenuActive, toggleMenu, activePage) {
-		return {ar: activePage, Q: isMenuActive, C: session, aU: toggleMenu};
+		return {ak: activePage, K: isMenuActive, f: session, aN: toggleMenu};
 	});
-var author$project$Views$Page$Counter = 1;
 var author$project$Views$Page$Home = 0;
-var author$project$Views$Page$Other = 2;
+var author$project$Views$Page$Newsletter = 3;
+var author$project$Views$Page$NotFound = 4;
+var author$project$Views$Page$Participate = 2;
+var elm$html$Html$footer = _VirtualDom_node('footer');
+var elm$html$Html$hr = _VirtualDom_node('hr');
+var elm$html$Html$i = _VirtualDom_node('i');
+var author$project$Views$Page$viewFooter = A2(
+	elm$html$Html$footer,
+	_List_fromArray(
+		[
+			elm$html$Html$Attributes$class('footer')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('container')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('content has-text-centered')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('row columns is-multiline')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column is-one-third')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$a,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$href('http://www.education.gouv.fr/110bislab/pid37871/bienvenue-au-110-bis-le-lab-d-innovation-de-l-education-nationale.html')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													elm$html$Html$img,
+													_List_fromArray(
+														[
+															elm$html$Html$Attributes$src('//res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_300,w_300,f_auto,q_auto/v1/1436014/r7mrgstb76x8onkugzno.jpg'),
+															elm$html$Html$Attributes$alt('Logo du Lab 110bis')
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column is-one-third')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$a,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$href('https://twitter.com/startupC12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													elm$html$Html$i,
+													_List_fromArray(
+														[
+															elm$html$Html$Attributes$class('fa fa-twitter-square fa-2x')
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column is-one-third')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$a,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$href('https://github.com/betagouv/ClasseA12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													elm$html$Html$i,
+													_List_fromArray(
+														[
+															elm$html$Html$Attributes$class('fa fa-github-square fa-2x')
+														]),
+													_List_Nil)
+												]))
+										]))
+								])),
+							A2(elm$html$Html$hr, _List_Nil, _List_Nil),
+							A2(
+							elm$html$Html$p,
+							_List_Nil,
+							_List_fromArray(
+								[
+									elm$html$Html$text('© 2018')
+								]))
+						]))
+				]))
+		]));
+var author$project$Route$toString = function (route) {
+	var pieces = function () {
+		switch (route) {
+			case 0:
+				return _List_Nil;
+			case 1:
+				return _List_fromArray(
+					['about']);
+			case 2:
+				return _List_fromArray(
+					['participate']);
+			default:
+				return _List_fromArray(
+					['newsletter']);
+		}
+	}();
+	return '#/' + A2(elm$core$String$join, '/', pieces);
+};
+var author$project$Route$href = function (route) {
+	return elm$html$Html$Attributes$href(
+		author$project$Route$toString(route));
+};
 var elm$html$Html$nav = _VirtualDom_node('nav');
 var elm$html$Html$span = _VirtualDom_node('span');
 var elm$core$List$filter = F2(
@@ -6410,12 +7018,27 @@ var elm$html$Html$Attributes$classList = function (classes) {
 				elm$core$Tuple$first,
 				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
 };
-var elm$html$Html$Attributes$target = elm$html$Html$Attributes$stringProperty('target');
-var elm$html$Html$Attributes$title = elm$html$Html$Attributes$stringProperty('title');
+var elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 0, a: a};
+};
+var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'click',
+		elm$json$Json$Decode$succeed(msg));
+};
 var author$project$Views$Page$viewHeader = function (_n0) {
-	var activePage = _n0.ar;
-	var isMenuActive = _n0.Q;
-	var toggleMenu = _n0.aU;
+	var activePage = _n0.ak;
+	var isMenuActive = _n0.K;
+	var toggleMenu = _n0.aN;
 	var linkMaybeActive = F3(
 		function (page, route, caption) {
 			return A2(
@@ -6520,28 +7143,10 @@ var author$project$Views$Page$viewHeader = function (_n0) {
 									]),
 								_List_fromArray(
 									[
-										A3(linkMaybeActive, 0, 0, 'Liste des vidéos'),
-										A3(linkMaybeActive, 1, 1, 'Second page'),
-										A2(
-										elm$html$Html$a,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('navbar-item'),
-												elm$html$Html$Attributes$target('_blank'),
-												elm$html$Html$Attributes$href('https://github.com/magopian/ClasseA12'),
-												elm$html$Html$Attributes$title('Lien vers le code source sur Github')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												elm$html$Html$img,
-												_List_fromArray(
-													[
-														elm$html$Html$Attributes$src('https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Ei-sc-github.svg/768px-Ei-sc-github.svg.png'),
-														elm$html$Html$Attributes$alt('Logo de Github')
-													]),
-												_List_Nil)
-											]))
+										A3(linkMaybeActive, 0, 0, 'Nos vidéos'),
+										A3(linkMaybeActive, 1, 1, 'Classe à 12 ?'),
+										A3(linkMaybeActive, 2, 2, 'Je participe !'),
+										A3(linkMaybeActive, 3, 3, 'Inscrivez-vous à notre infolettre')
 									]))
 							]))
 					]))
@@ -6552,7 +7157,7 @@ var author$project$Views$Page$frame = F2(
 		var title = _n0.a;
 		var content = _n0.b;
 		return {
-			aZ: _List_fromArray(
+			aS: _List_fromArray(
 				[
 					author$project$Views$Page$viewHeader(config),
 					A2(
@@ -6570,15 +7175,16 @@ var author$project$Views$Page$frame = F2(
 									elm$html$Html$Attributes$class('section')
 								]),
 							content)
-						]))
+						])),
+					author$project$Views$Page$viewFooter
 				]),
-			v: title + ' | Classe à 12'
+			bj: title + ' | Classe à 12'
 		};
 	});
 var elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var elm$html$Html$map = elm$virtual_dom$VirtualDom$map;
 var author$project$Main$view = function (model) {
-	var pageConfig = A3(author$project$Views$Page$Config, model.C, model.Q, author$project$Main$BurgerClicked);
+	var pageConfig = A3(author$project$Views$Page$Config, model.f, model.K, author$project$Main$BurgerClicked);
 	var mapMsg = F2(
 		function (msg, _n1) {
 			var title = _n1.a;
@@ -6592,7 +7198,7 @@ var author$project$Main$view = function (model) {
 		});
 	var _n0 = model.n;
 	switch (_n0.$) {
-		case 1:
+		case 0:
 			var homeModel = _n0.a;
 			return A2(
 				author$project$Views$Page$frame,
@@ -6600,36 +7206,49 @@ var author$project$Main$view = function (model) {
 				A2(
 					mapMsg,
 					author$project$Main$HomeMsg,
-					A2(author$project$Page$Home$view, model.C, homeModel)));
-		case 2:
-			var counterModel = _n0.a;
+					A2(author$project$Page$Home$view, model.f, homeModel)));
+		case 1:
+			var aboutModel = _n0.a;
 			return A2(
 				author$project$Views$Page$frame,
 				pageConfig(1),
 				A2(
 					mapMsg,
-					author$project$Main$CounterMsg,
-					A2(author$project$Page$Counter$view, model.C, counterModel)));
-		case 3:
+					author$project$Main$AboutMsg,
+					A2(author$project$Page$About$view, model.f, aboutModel)));
+		case 2:
+			var participateModel = _n0.a;
 			return A2(
 				author$project$Views$Page$frame,
 				pageConfig(2),
+				A2(
+					mapMsg,
+					author$project$Main$ParticipateMsg,
+					A2(author$project$Page$Participate$view, model.f, participateModel)));
+		case 3:
+			var newsletterModel = _n0.a;
+			return A2(
+				author$project$Views$Page$frame,
+				pageConfig(3),
+				A2(
+					mapMsg,
+					author$project$Main$NewsletterMsg,
+					A2(author$project$Page$Newsletter$view, model.f, newsletterModel)));
+		default:
+			return A2(
+				author$project$Views$Page$frame,
+				pageConfig(4),
 				_Utils_Tuple2(
 					'Not Found',
 					_List_fromArray(
 						[
 							elm$html$Html$text('Not found')
 						])));
-		default:
-			return A2(
-				author$project$Views$Page$frame,
-				pageConfig(2),
-				_Utils_Tuple2('', _List_Nil));
 	}
 };
 var elm$browser$Browser$application = _Browser_application;
 var author$project$Main$main = elm$browser$Browser$application(
-	{ba: author$project$Main$init, bd: author$project$Main$UrlChanged, be: author$project$Main$UrlRequested, bj: author$project$Main$subscriptions, bl: author$project$Main$update, bm: author$project$Main$view});
+	{a4: author$project$Main$init, a8: author$project$Main$UrlChanged, a9: author$project$Main$UrlRequested, bg: author$project$Main$subscriptions, bk: author$project$Main$update, bn: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
 	elm$json$Json$Decode$succeed(
 		{}))(0)}});}(this));
