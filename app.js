@@ -8020,7 +8020,7 @@ var author$project$Page$Participate$view = F2(
 									author$project$Page$Participate$formInput,
 									elm$html$Html$input,
 									'link',
-									'Lien vers la miniature de la vidéo',
+									'Lien vers la vidéo',
 									'https://example.com/mavideo',
 									newVideo.aQ,
 									function (link) {
