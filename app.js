@@ -7397,7 +7397,14 @@ var author$project$Main$update = F2(
 			elm$core$Platform$Cmd$none);
 	});
 var author$project$Main$BurgerClicked = {$: 7};
+var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$div = _VirtualDom_node('div');
+var elm$html$Html$em = _VirtualDom_node('em');
+var elm$html$Html$h1 = _VirtualDom_node('h1');
+var elm$html$Html$h2 = _VirtualDom_node('h2');
+var elm$html$Html$h3 = _VirtualDom_node('h3');
+var elm$html$Html$img = _VirtualDom_node('img');
+var elm$html$Html$p = _VirtualDom_node('p');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$stringProperty = F2(
@@ -7407,7 +7414,20 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			key,
 			elm$json$Json$Encode$string(string));
 	});
+var elm$html$Html$Attributes$alt = elm$html$Html$Attributes$stringProperty('alt');
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
+var elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
 var author$project$Page$About$view = F2(
 	function (_n0, model) {
 		return _Utils_Tuple2(
@@ -7416,13 +7436,303 @@ var author$project$Page$About$view = F2(
 				[
 					A2(
 					elm$html$Html$div,
+					_List_Nil,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('row columns is-multiline')
-						]),
-					_List_fromArray(
-						[
-							elm$html$Html$text('#the about page here#')
+							A2(
+							elm$html$Html$h1,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('title')
+								]),
+							_List_fromArray(
+								[
+									elm$html$Html$text('Classe à 12 ?')
+								])),
+							A2(
+							elm$html$Html$h2,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('subtitle')
+								]),
+							_List_fromArray(
+								[
+									elm$html$Html$text('Prêt.e ? Filmez ! Partagez !')
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('columns')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column is-narrow')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$img,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$src('http://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/v1/1436014/aaa54f1f-f314-4d46-9fa5-f3b48835db45_htkbm2.jpg'),
+													elm$html$Html$Attributes$alt('Photo de Malika Alouani et Nicolas Leyri')
+												]),
+											_List_Nil)
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$h3,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('title is-3')
+												]),
+											_List_fromArray(
+												[
+													elm$html$Html$text('Qui sommes-nous ?')
+												])),
+											A2(
+											elm$html$Html$em,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('« Ne vous laissez pas arrêter par ceux qui, devant l’imperfection de ce que vous réalisez, ne manqueront pas de prôner les méthodes du passé qu’ils voudraient empêcher de mourir définitivement » (Célestin Freinet).')
+												])),
+											A2(
+											elm$html$Html$p,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Malika : enseignante formatrice, conseillère au numérique à la Direction du numérique éducatif et à la délégation académique au numérique de Versailles, j’ai accepté de quitter la classe pour accompagner les nouveaux usages pédagogiques avec le numérique.')
+												])),
+											A2(
+											elm$html$Html$p,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Nicolas : coordonnateur REP à Fontenay-sous-Bois, je suis passionné par les problématiques de l’éducation prioritaire, l’innovation, les nouvelles technologies et la vidéo.')
+												])),
+											A2(
+											elm$html$Html$em,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('« Rien n’est plus fort en ce monde qu’une idée dont l’heure est arrivée » (Victor Hugo).')
+												]))
+										]))
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('columns')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('colum')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$h3,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('title is-3')
+												]),
+											_List_fromArray(
+												[
+													elm$html$Html$text('Un nouveau service, pour quoi faire ?')
+												])),
+											A2(
+											elm$html$Html$em,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Partager pour apprendre et progresser en équipe')
+												])),
+											A2(
+											elm$html$Html$p,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Ce projet en cours de développement, co-construit avec les enseignants des classes de CP à 12, a pour objectif de valoriser les retours d’expérience et les échanges de pratiques personnalisées, via un produit numérique de type réseau social.')
+												])),
+											A2(
+											elm$html$Html$p,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Que vous soyez novice ou expérimenté, nous vous proposons une plateforme vidéo permettant de partager vos expériences pédagogiques auprès de vos collègues, facilement et dans le respect des pratiques de chacun.')
+												]))
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column is-narrow')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$img,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$src('http://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/v1/1436014/IMG_5702_nv6pjl.png'),
+													elm$html$Html$Attributes$alt('Photo d\'élèves dans une classe')
+												]),
+											_List_Nil)
+										]))
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('columns')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column is-narrow')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$img,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$src('http://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/v1/1436014/2eaa8893-502a-439f-90ba-e0842eb72284_h4p2cg.jpg'),
+													elm$html$Html$Attributes$alt('Photo de Nicolas Leyri en train de se filmer sur son smartphone')
+												]),
+											_List_Nil)
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$h3,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('title is-3')
+												]),
+											_List_fromArray(
+												[
+													elm$html$Html$text('Comment participer ?')
+												])),
+											A2(
+											elm$html$Html$em,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Venez comme vous êtes, avec votre envie et vos idées !')
+												])),
+											A2(
+											elm$html$Html$p,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Vous avez expérimenté un scénario gagnant, vous avez tout simplement envie de partager et d\'échanger avec vos collègues ? Rien de plus simple avec Classe à 12 ! Postez une courte vidéo de 1 à 2 mn en format paysage et c\'est parti !')
+												])),
+											A2(
+											elm$html$Html$p,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('N\'oubliez pas de remplir et de nous envoyer un formulaire de droit à l\'image pour vos élèves, les parents ou vous-mêmes, selon la situation, que vous pouvez')
+												])),
+											A2(
+											elm$html$Html$a,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$href('http://eduscol.education.fr/internet-responsable/ressources/boite-a-outils.html')
+												]),
+											_List_fromArray(
+												[
+													elm$html$Html$text('trouver ici.')
+												]))
+										]))
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('columns')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$h3,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('title is-3')
+												]),
+											_List_fromArray(
+												[
+													elm$html$Html$text('Quel sujet traiter dans ma vidéo ?')
+												])),
+											A2(
+											elm$html$Html$em,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Toute contribution est précieuse, mutualisons nos expériences et nos intelligences !')
+												])),
+											A2(
+											elm$html$Html$p,
+											_List_Nil,
+											_List_fromArray(
+												[
+													elm$html$Html$text('Avec ou sans élève, racontez votre classe, décrivez son aménagement, partagez votre organisation avec vos collègues, montrez une séance pédagogique, parlez d\'un jeu ou d\'un livre qui vous a plu... tout est permis ! Regardez les exemples déjà proposés sur le site ! Et... si le sujet a déjà été traité, n\'hésitez pas à donner votre propre point de vue ! Nous nous enrichirons mutuellement.')
+												]))
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column is-narrow')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$img,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$src('http://res.cloudinary.com/hrscywv4p/image/upload/c_limit,fl_lossy,h_1440,w_720,f_auto,q_auto/v1/1436014/9ba429e2-d343-4e7e-a6de-fc0918beff54_rskzrf.png'),
+													elm$html$Html$Attributes$alt('Photo d\'un casier de rangements de feutres de couleur')
+												]),
+											_List_Nil)
+										]))
+								]))
 						]))
 				]));
 	});
@@ -7458,13 +7768,9 @@ var elm$core$Maybe$map = F2(
 			return elm$core$Maybe$Nothing;
 		}
 	});
-var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$figure = _VirtualDom_node('figure');
 var elm$html$Html$iframe = _VirtualDom_node('iframe');
-var elm$html$Html$img = _VirtualDom_node('img');
-var elm$html$Html$p = _VirtualDom_node('p');
-var elm$html$Html$Attributes$alt = elm$html$Html$Attributes$stringProperty('alt');
 var elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -7489,18 +7795,6 @@ var elm$html$Html$Attributes$classList = function (classes) {
 				elm$core$List$map,
 				elm$core$Tuple$first,
 				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
-};
-var elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
-var elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
 var elm$html$Html$Attributes$title = elm$html$Html$Attributes$stringProperty('title');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -7956,7 +8250,10 @@ var author$project$Page$Participate$loadingButton = F2(
 				]));
 	});
 var elm$html$Html$form = _VirtualDom_node('form');
+var elm$html$Html$i = _VirtualDom_node('i');
+var elm$html$Html$span = _VirtualDom_node('span');
 var elm$html$Html$textarea = _VirtualDom_node('textarea');
+var elm$html$Html$Attributes$accept = elm$html$Html$Attributes$stringProperty('accept');
 var elm$html$Html$Events$alwaysPreventDefault = function (msg) {
 	return _Utils_Tuple2(msg, true);
 };
@@ -8003,6 +8300,87 @@ var author$project$Page$Participate$view = F2(
 								]),
 							_List_fromArray(
 								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('field')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$div,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('file is-primary is-boxed is-large is-centered')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													elm$html$Html$div,
+													_List_fromArray(
+														[
+															elm$html$Html$Attributes$class('file-label')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															elm$html$Html$label,
+															_List_fromArray(
+																[
+																	elm$html$Html$Attributes$class('label')
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	elm$html$Html$input,
+																	_List_fromArray(
+																		[
+																			elm$html$Html$Attributes$class('file-input'),
+																			elm$html$Html$Attributes$type_('file'),
+																			elm$html$Html$Attributes$id('video'),
+																			elm$html$Html$Attributes$accept('video/*')
+																		]),
+																	_List_Nil),
+																	A2(
+																	elm$html$Html$span,
+																	_List_fromArray(
+																		[
+																			elm$html$Html$Attributes$class('file-cta')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			elm$html$Html$span,
+																			_List_fromArray(
+																				[
+																					elm$html$Html$Attributes$class('file-icon')
+																				]),
+																			_List_fromArray(
+																				[
+																					A2(
+																					elm$html$Html$i,
+																					_List_fromArray(
+																						[
+																							elm$html$Html$Attributes$class('fa fa-upload')
+																						]),
+																					_List_Nil)
+																				])),
+																			A2(
+																			elm$html$Html$span,
+																			_List_fromArray(
+																				[
+																					elm$html$Html$Attributes$class('file-label')
+																				]),
+																			_List_fromArray(
+																				[
+																					elm$html$Html$text('Fichier vidéo')
+																				]))
+																		]))
+																]))
+														]))
+												]))
+										])),
 									A6(
 									author$project$Page$Participate$formInput,
 									elm$html$Html$input,
@@ -8115,7 +8493,6 @@ var author$project$Views$Page$NotFound = 4;
 var author$project$Views$Page$Participate = 2;
 var elm$html$Html$footer = _VirtualDom_node('footer');
 var elm$html$Html$hr = _VirtualDom_node('hr');
-var elm$html$Html$i = _VirtualDom_node('i');
 var author$project$Views$Page$viewFooter = A2(
 	elm$html$Html$footer,
 	_List_fromArray(
@@ -8259,7 +8636,6 @@ var author$project$Route$href = function (route) {
 		author$project$Route$toString(route));
 };
 var elm$html$Html$nav = _VirtualDom_node('nav');
-var elm$html$Html$span = _VirtualDom_node('span');
 var author$project$Views$Page$viewHeader = function (_n0) {
 	var activePage = _n0.aB;
 	var isMenuActive = _n0.V;
