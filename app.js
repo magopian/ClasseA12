@@ -8497,7 +8497,7 @@ var author$project$Page$Participate$displaySubmitVideoForm = function (_n0) {
 															]),
 														_List_fromArray(
 															[
-																elm$html$Html$text('Fichier vidéo')
+																elm$html$Html$text('Envoyer un fichier vidéo')
 															]))
 													]))
 											]))
