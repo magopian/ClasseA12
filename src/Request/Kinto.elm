@@ -1,6 +1,16 @@
-module Request.Kinto exposing (client)
+module Request.Kinto exposing
+    ( KintoData(..)
+    , client
+    )
 
 import Kinto
+
+
+type KintoData a
+    = NotRequested
+    | Requested
+    | Received a
+    | Failed Kinto.Error
 
 
 client : String -> String -> Kinto.Client

@@ -1,6 +1,6 @@
 module Page.Participate exposing (Model, Msg(..), init, update, view)
 
-import Data.Kinto exposing (KintoData(..), Video, emptyVideo)
+import Data.Kinto exposing (Video, emptyVideo)
 import Data.Session exposing (Session)
 import Html as H
 import Html.Attributes as HA
@@ -12,6 +12,7 @@ import Ports
 import Random
 import Random.Char
 import Random.String
+import Request.Kinto exposing (KintoData(..))
 import Request.KintoUpcoming
 import Route
 

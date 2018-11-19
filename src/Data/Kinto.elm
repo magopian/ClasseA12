@@ -1,7 +1,6 @@
 module Data.Kinto exposing
     ( Attachment
     , Contact
-    , KintoData(..)
     , Video
     , attachmentDecoder
     , contactDecoder
@@ -17,13 +16,6 @@ module Data.Kinto exposing
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Kinto
-
-
-type KintoData a
-    = NotRequested
-    | Requested
-    | Received a
-    | Failed Kinto.Error
 
 
 

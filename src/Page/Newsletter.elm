@@ -1,6 +1,6 @@
 module Page.Newsletter exposing (Model, Msg(..), init, update, view)
 
-import Data.Kinto exposing (Contact, KintoData(..), emptyContact)
+import Data.Kinto exposing (Contact, emptyContact)
 import Data.Session exposing (Session)
 import Html as H
 import Html.Attributes as HA
@@ -10,6 +10,7 @@ import Kinto
 import Random
 import Random.Char
 import Random.String
+import Request.Kinto exposing (KintoData(..))
 import Request.KintoContact
 import Route
 
@@ -74,7 +75,7 @@ view _ { contact, newContactKintoData } =
     ( "Inscrivez-vous à notre infolettre"
     , [ H.div [ HA.class "hero" ]
             [ H.div [ HA.class "hero__container" ]
-                [ H.img [ HA.src "./logo_ca12.png" , HA.class "hero__logo" ] []
+                [ H.img [ HA.src "./logo_ca12.png", HA.class "hero__logo" ] []
                 , H.h1 [] [ H.text "Inscrivez-vous à notre infolettre" ]
                 , H.p [] [ H.text "Tenez-vous au courant des nouvelles vidéos et de l'actualité du projet !" ]
                 ]
@@ -110,11 +111,10 @@ view _ { contact, newContactKintoData } =
                                         UpdateContactForm { contact | role = role }
                                     )
                                 ]
-                                [
-                                    H.option [] []
-                                    , H.option [HA.value "CP"] [H.text "Enseignant en CP"]
-                                    , H.option [HA.value "CE1"] [H.text "Enseignant en CE1"]
-                                    , H.option [HA.value "Formateur"] [H.text "Formateur"]
+                                [ H.option [] []
+                                , H.option [ HA.value "CP" ] [ H.text "Enseignant en CP" ]
+                                , H.option [ HA.value "CE1" ] [ H.text "Enseignant en CE1" ]
+                                , H.option [ HA.value "Formateur" ] [ H.text "Formateur" ]
                                 ]
                             ]
                         , H.button
