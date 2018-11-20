@@ -27,6 +27,7 @@ type alias Video =
     , title : String
     , keywords : String
     , description : String
+    , attachment : Maybe Attachment
     }
 
 
@@ -35,16 +36,18 @@ emptyVideo =
     , description = ""
     , title = ""
     , keywords = ""
+    , attachment = Nothing
     }
 
 
 videoDecoder : Decode.Decoder Video
 videoDecoder =
-    Decode.map4 Video
+    Decode.map5 Video
         (Decode.field "id" Decode.string)
         (Decode.field "description" Decode.string)
         (Decode.field "title" Decode.string)
         (Decode.field "keywords" Decode.string)
+        (Decode.maybe (Decode.field "attachment" attachmentDecoder))
 
 
 decodeVideoList : Decode.Value -> Result Decode.Error (List Video)

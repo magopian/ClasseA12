@@ -1,4 +1,4 @@
-module Data.Session exposing (Session, Video, VideoData(..), decodeVideoList, encodeData, videoDecoder)
+module Data.Session exposing (Session, Video, VideoData(..), decodeVideoList, encodeVideo, videoDecoder)
 
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -42,8 +42,8 @@ decodeVideoList =
         Decode.list videoDecoder
 
 
-encodeData : Video -> Encode.Value
-encodeData video =
+encodeVideo : Video -> Encode.Value
+encodeVideo video =
     Encode.object
         [ ( "description", Encode.string video.description )
         , ( "link", Encode.string video.link )
